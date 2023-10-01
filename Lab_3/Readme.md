@@ -169,8 +169,149 @@ DELIMITER ;
 
 ## Exercice 3 : 
 
+Nous devons modifier le script du `lab_2` pour ajouter des contraintes.
+
+#### Le salaire d'un employer doit être positif.
+
+Ici on inclut une contrainte `CHECK` comme ceci : 
+
+Avant :
+
+``` SQL
+SAL decimal(6 , 2) not null
+```
+
+Après :
+
+```SQL
+SAL decimal(6 , 2) not null CHECK (SAL > 0)
+```
+
+Ceci fera en sorte que le salaire soit positif.
+
+#### La date d'embauche d'un employé ne peut pas être dans le futur.
+
+Ici aussi, on inclut un contrainte `CHECK` comme ceci :
+
+Avant :
+
+``` SQL
+HIRED date not null
+```
+
+Après :
+
+``` SQL
+HIRED date not null CHECK (HIRED <= CURDATE())
+```
+
+#### Faire en sorte que le nom d'un employé soit en majuscule et non vide.
+
+Il faut d'abord utiliser un trigger pour rendre le nom en majuscule en utilisant `Before Insert` comme ceci :
+
+```SQL
+DELIMITER //
+CREATE TRIGGER uppercase_name
+BEFORE INSERT ON EMP
+FOR EACH ROW
+BEGIN
+    SET NEW.ENAME = UPPER(NEW.ENAME);
+END;
+//
+DELIMITER ;
+```
+
+On utilise ensuite une contrainte `CHECK` pour vérifier que la chaine de caractère n'est pas vide.
+
+``` SQL
+ ENAME varchar(20) not null CHECK (ENAME <> '')
+```
+
+Les contraintes sont vérifié au moment des opérations de changement de données, commet `Insert`, `Delete` ou `Update`.
+
+Les contraintes fonctionnent (il y a cependant un problème en fonction de la version de phpMyAdmin). 
 
 ## Exercice 4 : 
+
+Ajout de nouvelles contraintes : 
+
+#### Un employé doit gagner moins de 7500$ sauf si c'est le président.
+
+Voici ce que l'on fait :
+
+Avant :
+
+``` SQL
+SAL decimal(6 , 2) not null CHECK (SAL > 0)
+```
+
+Après : 
+
+``` SQL
+ SAL     decimal(6 , 2) not null CHECK (
+        SAL > 0 AND
+        ((SAL <= 7500.00 AND JOB <> 'PRESIDENT') OR JOB = 'PRESIDENT')
+    ),
+```
+
+#### Le salaire moyen par département ne doit pas dépasser 5000$.
+
+On peut utiliser un trigger pour faire ceci :
+
+``` Sql
+DELIMITER //
+CREATE TRIGGER check_avg_salary
+BEFORE INSERT ON EMP
+FOR EACH ROW
+BEGIN
+    DECLARE dept_avg_salary DECIMAL(6, 2);
+
+    SELECT AVG(SAL) INTO dept_avg_salary
+    FROM EMP
+    WHERE DID = NEW.DID;
+
+    IF dept_avg_salary > 5000.00 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Average salary for the department cannot exceed $5,000.';
+    END IF;
+END;
+//
+DELIMITER ;
+```
+
 ## Exercice 5 : 
+
+On reprend la contrainte de l'exercice `3.a` et on utilise un trigger :
+
+``` sql
+DELIMITER //
+CREATE TRIGGER positive_salary
+BEFORE INSERT ON EMP
+FOR EACH ROW
+BEGIN
+    IF NEW.SAl < 0 THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Negative salary';
+    END IF;
+END;
+//
+DELIMITER ;
+```
+
 ## Exercice 6 : 
+
+Ici on peut utiliser le trigger créer pour l'exercice `3.c` : 
+
+``` sql
+DELIMITER //
+CREATE TRIGGER uppercase_name
+BEFORE INSERT ON EMP
+FOR EACH ROW
+BEGIN
+    SET NEW.ENAME = UPPER(NEW.ENAME);
+END;
+//
+DELIMITER ;
+```
+
 ## Exercice 7 : 

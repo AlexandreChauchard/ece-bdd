@@ -3,9 +3,9 @@
 --
 -- Note: beware of foreign keys
 --
--- drop table MISSION;
--- drop table EMP;
--- drop table DEPT;
+ drop table MISSION;
+ drop table EMP;
+ drop table DEPT;
 
 --
 -- 2. CREATE database 
@@ -28,11 +28,14 @@ create table DEPT (
 
 create table EMP (
     EID     int,
-    ENAME   varchar(20) not null,
+    ENAME   varchar(20) not null CHECK (ENAME <> '' AND ENAME IS NOT NULL),
     JOB     varchar(20) not null,
     MGR     int,
-    HIRED   date not null,
-    SAL     decimal(6 , 2) not null,
+    HIRED   date not null CHECK (HIRED <= CURDATE()),
+    SAL     decimal(6 , 2) not null CHECK (
+        SAL > 0 AND  -- Salary must be positive
+        ((SAL <= 7500.00 AND JOB <> 'PRESIDENT') OR JOB = 'PRESIDENT')  -- Salary limit for non-presidents
+    ),   -- Constraint for salary
     COMM    decimal(6 , 2),
     DID     int,
     constraint EMP_PK primary key (EID),
@@ -51,7 +54,53 @@ create table MISSION (
 ) engine=InnoDB;
 
 --
--- 3. POPULATE database
+-- 3. Trigger
+--
+
+DELIMITER //
+CREATE TRIGGER uppercase_name
+BEFORE INSERT ON EMP
+FOR EACH ROW
+BEGIN
+    SET NEW.ENAME = UPPER(NEW.ENAME);
+END;
+//
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER check_avg_salary
+BEFORE INSERT ON EMP
+FOR EACH ROW
+BEGIN
+    DECLARE dept_avg_salary DECIMAL(6, 2);
+
+    SELECT AVG(SAL) INTO dept_avg_salary
+    FROM EMP
+    WHERE DID = NEW.DID;
+
+    IF dept_avg_salary > 5000.00 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Average salary for the department cannot exceed $5,000.';
+    END IF;
+END;
+//
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER positive_salary
+BEFORE INSERT ON EMP
+FOR EACH ROW
+BEGIN
+    IF NEW.SAl < 0 THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Negative salary';
+    END IF;
+END;
+//
+DELIMITER ;
+
+--
+-- 4. POPULATE database
 --
 
 -- Table DEPT
