@@ -63,9 +63,113 @@ DELIMITER ;
 
 ## Exercice 2 : 
 
+Nous cherchons ici les déclarations qui pourraient briser la contrainte de la clé étrangère.
 
+`Insert Into R` :
+
+- Insérer un nouveau tuple dans la table `R` avec un valeur dans la colonne `B` qui n'existe pas dans la table `S`.
+Soumis à la programmation de la contrainte de la clé étrangère de la DBMS.
+
+`Update` :
+
+- Modifier un tuple dans la table `R` avec un valeur dans la colonne `B` qui n'existe pas dans la table `S`.
+Soumis à la programmation de la contrainte de la clé étrangère de la DBMS.
+
+`Delete` : 
+
+- Supprimer un tuple dans la table `S` qui est référencé pas un ou plusieurs tuples dans la table `R`.
+L'effet dépend de la stratégie d'intégrité référentielle choisie.
+
+`Alter Table` : 
+
+- Altérer la talbe `R` en modifiant ou supprimant la contrainte de clé étrangère.
+
+Si nous n'avons pas de contrainte de clé étrangère de base on peut les émuler de la manière suivante :
+
+`Set Null policy` : 
+
+On peut utiliser une combinaison d'une contrainte `unique` sur la colonne référencée et un trigger pour mettre la colonne de la clé étrangère à `null` quand un tuple référencé est supprimé ou modifé.
+
+``` SQL
+CREATE TABLE S (
+    B INT PRIMARY KEY,
+    C INT
+);
+
+CREATE TABLE R (
+    A INT,
+    B INT,
+    CONSTRAINT fk_s FOREIGN KEY (B) REFERENCES S(B)
+);
+
+DELIMITER //
+CREATE TRIGGER set_null_fk
+BEFORE DELETE ON S
+FOR EACH ROW
+BEGIN
+    UPDATE R SET B = NULL WHERE B = OLD.B;
+END;
+//
+DELIMITER ;
+```
+
+`Cascade policy` :
+
+Ici, on peut utiliser un trigger qui supprime le tuple dans la table qui référence quand un tuple référencé est supprimé.
+
+```SQL
+CREATE TABLE S (
+    B INT PRIMARY KEY,
+    C INT
+);
+
+CREATE TABLE R (
+    A INT,
+    B INT,
+    FOREIGN KEY (B) REFERENCES S(B)
+);
+
+DELIMITER //
+CREATE TRIGGER cascade_fk
+BEFORE DELETE ON S
+FOR EACH ROW
+BEGIN
+    DELETE FROM R WHERE B = OLD.B;
+END;
+//
+DELIMITER ;
+```
+
+`Reject Default policy` :
+
+On peut encore une fois utiliser la combinaison de contrainte `unique` sur la colonne référencée, et d'un trigger pour empêcher la deletion ou la modification d'un tuple référencé.
+
+```sql
+CREATE TABLE S (
+    B INT PRIMARY KEY,
+    C INT
+);
+
+CREATE TABLE R (
+    A INT,
+    B INT,
+    CONSTRAINT fk_s FOREIGN KEY (B) REFERENCES S(B)
+);
+
+DELIMITER //
+CREATE TRIGGER reject_fk
+BEFORE DELETE ON S
+FOR EACH ROW
+BEGIN
+    SET MESSAGE_TEXT = 'Referenced row cannot be deleted or updated due to foreign key constraint.';
+END;
+//
+DELIMITER ;
+```
 
 ## Exercice 3 : 
+
+
 ## Exercice 4 : 
 ## Exercice 5 : 
 ## Exercice 6 : 
