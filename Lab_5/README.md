@@ -43,3 +43,19 @@ Le rôle de commit est donc de valider la transaction.
 ## Partie 2 - Client Failure
 
 Si on ajoute une entrée dans la ligne département avant de fermer l'application de manière normale, ce département n'est plus là à la réouverture.
+
+## Partie 3 - Transaction Isolation
+
+Dans un premier temps nous devons déterminer le niveau d'isolation par défaut de notre transaction grâce à la commande suivante :
+
+``` sql
+show variables like '%isolation%'
+```
+
+On obtient alors le résultat suivant :
+
+``` cli
+Variable_Name                   Value 
+transaction_isolation           REPEATABLE-READ
+tx_isolation                    REPEATABLE-READ
+```
