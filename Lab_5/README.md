@@ -59,3 +59,69 @@ Variable_Name                   Value
 transaction_isolation           REPEATABLE-READ
 tx_isolation                    REPEATABLE-READ
 ```
+
+Le but ici est de montrer que les modifications apportée ne sont visible que depuis la transaction actuelle.
+
+Pour faire l'insertion, on ouvre 2 pages de connexion sur `MySQLWorkbench` avec les codes suivants : 
+
+``` sql
+set autocommit = 0;
+use Lab3;
+start transaction;
+
+insert into DEPT values(110,'test','test');
+
+Select * from DEPT;
+```
+
+Et
+
+```sql
+set autocommit = 0;
+use Lab3;
+Select * from DEPT;
+```
+
+On peut voir lorsque l'on utilise la première fenêtre apparaître la ligne `110` tandis qu'on ne la vois pas sur la deuxième fenêtre.
+
+On fait ensuite la même chose pour la suppression : 
+
+``` sql
+set autocommit = 0;
+use Lab3;
+start transaction;
+
+delete from DEPT where DID > 90;
+
+Select * from DEPT;
+```
+
+``` sql
+set autocommit = 0;
+use Lab3;
+Select * from DEPT;
+```
+
+On ne voit plus aucun département avec un `ID` > 90 dans la première fenêtre tandis que dans la seconde on peut toujours en voir.
+
+# Partie 4 - Niveau d'isolation
+
+En premier lieu on change le niveau d'isolation avec la ligne suivante :
+
+``` sql
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+```
+
+Puis on réutilise le code d'insertion de la question précédente et on se rend compte que maintenant la deuxième connexion peut voir le nouvel élément ajouté. Ceci car on a fait en sorte qu'il puisse y avoir une lecture de notre transction même si il n'y a pas eu de commit.
+
+Cependant, la deuxième fenêtre ne voit pas la délétion. Cela confirme bien que la permession permet uniquement la lecture de nouvelle insertion.
+
+## Partie 5 - Niveau d'isolation suite
+
+On passe maintenant le niveau d'isolation en "serializable" via la commande suivante :
+
+``` sql
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+```
+
+Après des tests on voit que on ne peut plus rien observer sur la deuxième transaction. Le rôle de ce niveau d'isolation est de protéger au maximum les informations.
