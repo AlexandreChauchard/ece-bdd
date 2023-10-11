@@ -19,3 +19,10 @@ Select * from DEPT;
 commit;
 Select * from DEPT;
 -- Exercice 2
+set autocommit = 0;
+use Lab3;
+start transaction;
+
+insert into DEPT Values (110,'Test','Paris');
+
+Select * from DEPT;
