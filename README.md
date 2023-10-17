@@ -13,4 +13,4 @@ Lab 4 : fini\
 Lab 5 : fini\
 Lab 6 : à faire
 
-Assignement 1 : à retranscrire
+Assignement 1 : fini
